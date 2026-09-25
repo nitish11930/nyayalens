@@ -1,0 +1,56 @@
+.page { min-height: 100dvh; background: #f9fafb; padding-bottom: 80px; }
+.loading { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: #6b7280; }
+.spinner { width: 40px; height: 40px; border: 3px solid #e0e7ff; border-top-color: #4f46e5; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: white; border-bottom: 1px solid #f3f4f6; }
+.backBtn { background: none; border: none; font-size: 0.9rem; color: #6b7280; cursor: pointer; font-family: inherit; }
+.title { font-size: 1rem; font-weight: 800; color: #111827; }
+.langToggle { font-size: 0.7rem; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 20px; padding: 4px 8px; color: #374151; }
+
+.disclaimer { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-bottom: 1px solid #bfdbfe; padding: 8px 16px; display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: #1d4ed8; }
+
+.main { padding: 16px; max-width: 480px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+.noAnalysis { text-align: center; padding: 48px 20px; }
+.noAnalysisIcon { font-size: 3rem; margin-bottom: 12px; }
+.noAnalysis h2 { font-size: 1.2rem; font-weight: 800; color: #111827; margin-bottom: 8px; }
+.noAnalysis p { font-size: 0.85rem; color: #6b7280; margin-bottom: 20px; }
+.analyzeBtn { background: linear-gradient(135deg, #3730d4, #4f46e5); color: white; border: none; border-radius: 10px; padding: 12px 24px; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+.introCard { background: linear-gradient(140deg, #1a1f52, #3730d4); border-radius: 16px; padding: 20px; color: white; }
+.introLabel { font-size: 0.6rem; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.introTitle { font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; }
+.introDesc { font-size: 0.82rem; color: rgba(255,255,255,0.85); line-height: 1.5; }
+
+.questionsList { display: flex; flex-direction: column; gap: 10px; }
+
+.questionCard { background: white; border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; transition: all 0.2s; }
+.questionCard:hover { border-color: #a5b4fc; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1); }
+.questionExpanded { border-color: #6366f1; box-shadow: 0 4px 16px rgba(79, 70, 229, 0.15); }
+
+.questionHeader { width: 100%; display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: none; border: none; cursor: pointer; text-align: left; font-family: inherit; }
+.questionNum { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #3730d4, #6366f1); color: white; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.questionText { flex: 1; font-size: 0.88rem; font-weight: 600; color: #111827; line-height: 1.5; }
+.chevron { font-size: 0.6rem; color: #9ca3af; flex-shrink: 0; margin-top: 4px; }
+
+.questionBody { padding: 0 16px 14px 52px; border-top: 1px solid #f3f4f6; padding-top: 12px; }
+.contextLabel { font-size: 0.68rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; margin-top: 8px; }
+.contextText { font-size: 0.82rem; color: #374151; line-height: 1.5; }
+.docBasis { font-size: 0.8rem; color: #6b7280; font-style: italic; background: #f9fafb; border-left: 3px solid #a5b4fc; padding: 8px 10px; border-radius: 0 8px 8px 0; line-height: 1.5; }
+
+.exportCard { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border: 1px solid #ddd6fe; border-radius: 14px; padding: 16px; }
+.exportTitle { font-size: 0.9rem; font-weight: 700; color: #5b21b6; margin-bottom: 4px; }
+.exportDesc { font-size: 0.78rem; color: #7c3aed; margin-bottom: 12px; }
+.exportBtn { background: #5b21b6; color: white; border: none; border-radius: 10px; padding: 10px 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+.hindiSection { background: white; border: 1px solid #f3f4f6; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.hindiLabel { font-family: 'Noto Sans Devanagari', sans-serif; font-size: 0.9rem; font-weight: 700; color: #374151; margin-bottom: 4px; }
+.hindiQuestion { display: flex; gap: 10px; align-items: flex-start; }
+.hindiNum { width: 22px; height: 22px; border-radius: 50%; background: #e0e7ff; color: #3730d4; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.hindiText { font-family: 'Noto Sans Devanagari', sans-serif; font-size: 0.83rem; color: #374151; line-height: 1.6; }
+
+.dlsaCard { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 14px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; font-size: 1.4rem; }
+.dlsaTitle { font-size: 0.9rem; font-weight: 700; color: #065f46; margin-bottom: 4px; }
+.dlsaDesc { font-size: 0.78rem; color: #047857; line-height: 1.5; margin-bottom: 10px; }
+.dlsaBtn { background: #065f46; color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: inherit; }

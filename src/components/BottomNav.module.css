@@ -1,0 +1,98 @@
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid #e5e7eb;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: all 0.2s;
+  border-radius: 12px;
+  min-width: 52px;
+  font-family: inherit;
+}
+
+.navItem:hover {
+  color: #6b7280;
+}
+
+.navItem.active {
+  color: #3730d4;
+}
+
+.iconBg {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.navItem.active .iconBg {
+  background: linear-gradient(135deg, #3730d4, #6366f1);
+}
+
+.icon {
+  font-size: 1.1rem;
+  filter: grayscale(1);
+  transition: all 0.2s;
+}
+
+.navItem.active .icon {
+  filter: grayscale(0);
+  font-size: 1rem;
+}
+
+.label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Center (Analyze) button */
+.center {
+  position: relative;
+  top: -14px;
+}
+
+.center .iconBg {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3730d4, #4f46e5);
+  box-shadow: 0 4px 15px rgba(55, 48, 212, 0.5);
+}
+
+.center .icon {
+  filter: grayscale(0) brightness(10);
+  font-size: 1.3rem;
+}
+
+.center.active .iconBg,
+.center:hover .iconBg {
+  background: linear-gradient(135deg, #2920c4, #4338ca);
+  box-shadow: 0 6px 20px rgba(55, 48, 212, 0.6);
+  transform: translateY(-1px);
+}
