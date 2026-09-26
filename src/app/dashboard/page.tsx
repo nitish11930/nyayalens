@@ -295,7 +295,7 @@ function NoticeCard({ analysis, onClick }: { analysis: AnalysisResult; onClick: 
           <p className={styles.noticeName}>{analysis.noticeCategory?.type || 'Legal Notice'}</p>
           {analysis.deadline && (
             <span className={styles.timerBadge}>
-              {analysis.deadline.days}-DAY {analysis.deadline.unit.toUpperCase()}
+              {analysis.deadline.days}-DAY {(analysis.deadline.unit || 'days').toUpperCase()}
             </span>
           )}
         </div>
