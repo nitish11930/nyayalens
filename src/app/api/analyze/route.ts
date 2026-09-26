@@ -52,21 +52,16 @@ function classifyGeminiError(status: number, body: string): string {
   }
 }
 
-// ─── Real Gemini API Call with Exponential Backoff ────────────────────────────
-// CONFIRMED WORKING:
-//   - Model: gemini-3.8-flash (verified Sept 2026)
-//   - Auth:  x-goog-api-key header (works for AQ. tokens from new AI Studio)
-// DO NOT change auth to Authorization: Bearer — that causes 401.
-// Retries: up to 4 attempts for transient 503 errors, exponential backoff + jitter.
+// ─── Real Gemini API Call with Exponential Backoff & Fallback ───────────────
 async function callGeminiREST(
   apiKey: string,
   fileBase64: string,
   mimeType: string,
   fileName: string
 ): Promise<string> {
-  const MODEL    = 'gemini-3.8-flash';
-  const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-
+  // Current stable production models (support multimodal + structured JSON)
+  const MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+  
   const requestBody = {
     contents: [
       {
@@ -89,79 +84,81 @@ async function callGeminiREST(
     },
   };
 
-  // Retry config — only 503 (overloaded) and 500 (server error) are retried.
-  // 401/403/429/400 are terminal — retrying won't help.
   const RETRYABLE_STATUSES = new Set([503, 500]);
-  const MAX_ATTEMPTS = 4;
-  const BASE_DELAY_MS = 2000; // 2s → 4s → 8s (doubles each retry)
+  const MAX_ATTEMPTS_PER_MODEL = 4;
+  const BASE_DELAY_MS = 1000; // 1s → 2s → 4s
 
   let lastError = '';
   let lastStatus = 0;
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    console.log(`[Gemini] Attempt ${attempt}/${MAX_ATTEMPTS} — model: ${MODEL}, file: "${fileName}"`);
+  for (const model of MODELS) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS_PER_MODEL; attempt++) {
+      console.log(`[Gemini] Attempt ${attempt}/${MAX_ATTEMPTS_PER_MODEL} with model: ${model} (file: "${fileName}")`);
 
-    const res = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
-      },
-      body: JSON.stringify(requestBody),
-    });
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey,
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    // ── Success ───────────────────────────────────────────────────────────────
-    if (res.ok) {
-      const data = await res.json();
-      
-      const candidate = data?.candidates?.[0];
-      const text: string = candidate?.content?.parts?.[0]?.text ?? '';
-      const finishReason = candidate?.finishReason;
-
-      if (!text) {
-        console.error('[Gemini] Empty response body. Full data:', JSON.stringify(data).slice(0, 500));
+      // ── Success ───────────────────────────────────────────────────────────────
+      if (res.ok) {
+        const data = await res.json();
         
-        if (finishReason === 'SAFETY') {
-           throw new Error('Gemini refused to process this image due to safety filters.');
-        } else if (finishReason === 'RECITATION') {
-           throw new Error('Gemini refused to process this image due to recitation blocks.');
-        } else if (data.promptFeedback?.blockReason) {
-           throw new Error(`The prompt or image was blocked: ${data.promptFeedback.blockReason}`);
-        } else {
-           throw new Error('Gemini did not return analyzable content for this image. It may be unreadable, unsupported, or blank.');
+        const candidate = data?.candidates?.[0];
+        const text: string = candidate?.content?.parts?.[0]?.text ?? '';
+        const finishReason = candidate?.finishReason;
+
+        if (!text) {
+          console.error('[Gemini] Empty response body. Full data:', JSON.stringify(data).slice(0, 500));
+          
+          if (finishReason === 'SAFETY') {
+             throw new Error('Gemini refused to process this document due to safety filters.');
+          } else if (finishReason === 'RECITATION') {
+             throw new Error('Gemini refused to process this document due to recitation blocks.');
+          } else if (data.promptFeedback?.blockReason) {
+             throw new Error(`The prompt or document was blocked: ${data.promptFeedback.blockReason}`);
+          } else {
+             throw new Error('Gemini did not return analyzable content. It may be unreadable, unsupported, or blank.');
+          }
         }
+
+        console.log(`[Gemini] Success on attempt ${attempt} with ${model}.`);
+        return text;
       }
 
-      console.log(`[Gemini] Success on attempt ${attempt}. Parsing structured JSON...`);
-      return text;
+      // ── Error ─────────────────────────────────────────────────────────────────
+      lastStatus = res.status;
+      const errBody = await res.text();
+      lastError = classifyGeminiError(res.status, errBody);
+
+      console.error(`[Gemini] ${model} attempt ${attempt} failed — HTTP ${res.status}:`, errBody.slice(0, 200));
+
+      // Non-retryable errors (e.g. 401, 403, 400) — fail immediately
+      if (!RETRYABLE_STATUSES.has(res.status)) {
+        console.error(`[Gemini] Non-retryable error (${res.status}). Aborting all attempts.`);
+        throw new Error(lastError);
+      }
+
+      // Retryable (503/500) — wait then retry, unless this was the last attempt for this model
+      if (attempt < MAX_ATTEMPTS_PER_MODEL) {
+        const baseWait = BASE_DELAY_MS * Math.pow(2, attempt - 1);
+        const jitter   = baseWait * 0.3 * (Math.random() * 2 - 1); // ±30%
+        const waitMs   = Math.round(baseWait + jitter);
+        console.log(`[Gemini] ${res.status} received from ${model} — retrying in ${waitMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+      }
     }
-
-    // ── Error ─────────────────────────────────────────────────────────────────
-    lastStatus = res.status;
-    const errBody = await res.text();
-    lastError = classifyGeminiError(res.status, errBody);
-
-    console.error(`[Gemini] Attempt ${attempt} failed — HTTP ${res.status}:`, errBody.slice(0, 200));
-
-    // Non-retryable errors — fail immediately, no point retrying
-    if (!RETRYABLE_STATUSES.has(res.status)) {
-      console.error(`[Gemini] Non-retryable error (${res.status}). Aborting.`);
-      throw new Error(lastError);
-    }
-
-    // Retryable (503/500) — wait then retry, unless this was the last attempt
-    if (attempt < MAX_ATTEMPTS) {
-      // Exponential backoff with ±30% jitter to avoid thundering herd
-      const baseWait = BASE_DELAY_MS * Math.pow(2, attempt - 1);
-      const jitter   = baseWait * 0.3 * (Math.random() * 2 - 1); // ±30%
-      const waitMs   = Math.round(baseWait + jitter);
-      console.log(`[Gemini] ${res.status} received — retrying in ${waitMs}ms...`);
-      await new Promise(resolve => setTimeout(resolve, waitMs));
-    }
+    console.log(`[Gemini] Model ${model} exhausted all retries. Falling back to next model if available...`);
   }
 
-  // All retries exhausted
-  console.error(`[Gemini] All ${MAX_ATTEMPTS} attempts failed. Last status: ${lastStatus}`);
+  // All models and retries exhausted
+  console.error(`[Gemini] All models and retries failed. Last status: ${lastStatus}`);
   throw new Error(lastError);
 }
 
