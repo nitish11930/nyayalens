@@ -113,11 +113,23 @@ async function callGeminiREST(
     // ── Success ───────────────────────────────────────────────────────────────
     if (res.ok) {
       const data = await res.json();
-      const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      
+      const candidate = data?.candidates?.[0];
+      const text: string = candidate?.content?.parts?.[0]?.text ?? '';
+      const finishReason = candidate?.finishReason;
 
       if (!text) {
         console.error('[Gemini] Empty response body. Full data:', JSON.stringify(data).slice(0, 500));
-        throw new Error('Gemini returned an empty response. The document may be unreadable or too short.');
+        
+        if (finishReason === 'SAFETY') {
+           throw new Error('Gemini refused to process this image due to safety filters.');
+        } else if (finishReason === 'RECITATION') {
+           throw new Error('Gemini refused to process this image due to recitation blocks.');
+        } else if (data.promptFeedback?.blockReason) {
+           throw new Error(`The prompt or image was blocked: ${data.promptFeedback.blockReason}`);
+        } else {
+           throw new Error('Gemini did not return analyzable content for this image. It may be unreadable, unsupported, or blank.');
+        }
       }
 
       console.log(`[Gemini] Success on attempt ${attempt}. Parsing structured JSON...`);
@@ -216,7 +228,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: `Gemini analysis failed: ${message}. Please verify GEMINI_API_KEY is valid and not expired.`,
+          error: `Gemini analysis failed: ${message}`,
         },
         { status: 502 }
       );
