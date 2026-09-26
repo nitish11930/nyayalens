@@ -60,7 +60,7 @@ async function callGeminiREST(
   fileName: string
 ): Promise<string> {
   // Current stable production models (support multimodal + structured JSON)
-  const MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+  const MODELS = ['gemini-3.8-flash', 'gemini-3.1-pro'];
   
   const requestBody = {
     contents: [
